@@ -1,6 +1,8 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
+
 
 class Game
 {
@@ -29,8 +31,8 @@ public:
     void movePlayer();
     void update();
 
-    SDL_Texture *playerTexture();
-    SDL_FRect playerRect();
+    SDL_Texture *loadTexture(const char *path);
+
 
     bool running() const { return isRunning; }
     void clean();
@@ -44,6 +46,8 @@ private:
 
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
+
+    SDL_Texture *playerTex = nullptr;
 
     SDL_FRect player;
 };

@@ -1,11 +1,15 @@
+CXX = g++
+SRC = src/*.cpp
+BIN = main
+CXXFLAGS = -Iinclude -I$(HOME)/.local/include -I$(HOME)/.local/include/SDL3 -std=c++17
+LDFLAGS = -L$(HOME)/.local/lib
+LDLIBS = -lSDL3 -lSDL3_image -ldl -lm
 
 all:
-	g++ src/*.cpp -o main -I/usr/local/include -Iinclude -L/usr/local/lib -lSDL3
+	$(CXX) $(SRC) -o $(BIN) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
-
-run:
-	g++ src/*.cpp -o main -I/usr/local/include -Iinclude  -L/usr/local/lib -lSDL3
-	./main
+run: all
+	./$(BIN)
 
 clean:
-	rm main
+	rm -f $(BIN)

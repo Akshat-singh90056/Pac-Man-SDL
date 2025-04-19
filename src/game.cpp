@@ -43,9 +43,27 @@ bool Game::init(const char *title)
 
     player = {(float)(WINDOW_W - TILE_SIZE) / 2, (float)(WINDOW_H - TILE_SIZE) / 2, TILE_SIZE, TILE_SIZE};
 
+    playerTex = IMG_LoadTexture(renderer, "assets/images/png/pacman.png");
+
+
+    if (!playerTex)
+    {
+        SDL_Log("Failed to load player texture: %s", SDL_GetError());
+        return false;
+    }
+
     isRunning = true;
     return true;
 }
+
+// SDL_Texture *Game::loadTexture(const char *path)
+// {
+
+//     SDL_Surface *playerSurface = IMG_Load("assets/images/png/pacman.png");
+//     SDL_Texture *playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+//     SDL_DestroySurface(playerSurface);
+//     return playerTexture;
+// }
 
 void Game::handleEvents()
 {
@@ -80,7 +98,7 @@ void Game::handleEvents()
 void Game::movePlayer()
 {
 
-    float distance = PLAYER_SPEED * deltaTime ;
+    float distance = PLAYER_SPEED * deltaTime;
 
     switch (currentDirection)
     {
@@ -110,13 +128,14 @@ void Game::update()
 
     movePlayer();
     collision();
-    
 }
 
 void Game::renderPlayer()
 {
     SDL_SetRenderDrawColor(renderer, 255, 225, 225, 255);
-    SDL_RenderFillRect(renderer, &player);
+    // SDL_RenderFillRect(renderer, &player);
+
+    SDL_RenderTexture(renderer, playerTex, nullptr, &player);
 }
 
 void Game::render()
@@ -180,7 +199,7 @@ void Game::collision()
     }
     else if (player.x > WINDOW_W - TILE_SIZE)
     {
-        player.x = (WINDOW_W - 2*TILE_SIZE) - 2;
+        player.x = (WINDOW_W - 2 * TILE_SIZE) - 2;
         currentDirection = NONE;
     }
     else if (player.y < 0 + TILE_SIZE)
@@ -190,22 +209,20 @@ void Game::collision()
     }
     else if (player.y > WINDOW_H - 2 * TILE_SIZE)
     {
-        player.y = WINDOW_H - 2*TILE_SIZE - 2;
+        player.y = WINDOW_H - 2 * TILE_SIZE - 2;
         currentDirection = NONE;
     }
 }
 
-SDL_Texture *Game::playerTexture()
-{
-
-    SDL_Surface *playerSurface = SDL_LoadBMP("assets/images/png/pacman.png");
-    SDL_Texture *playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
-    SDL_DestroySurface(playerSurface);
-    return playerTexture;
-}
-
 void Game::clean()
 {
+
+    if (playerTex)
+    {
+        SDL_DestroyTexture(playerTex);
+        playerTex = nullptr;
+    }
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
