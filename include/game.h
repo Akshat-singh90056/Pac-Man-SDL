@@ -2,13 +2,15 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
-
-
+#include "enemy.h"
+#include "map.h"
+#include<vector>
 class Game
 {
 public:
     Game(int width, int height);
     ~Game();
+
 
     enum Direction
     {
@@ -19,7 +21,7 @@ public:
         RIGHT
     };
     Direction currentDirection;
-
+    
     Uint64 lastTime = 0;
     float deltaTime = 0.0f;
 
@@ -32,7 +34,6 @@ public:
     void update();
 
     SDL_Texture *loadTexture(const char *path);
-
 
     bool running() const { return isRunning; }
     void clean();
@@ -48,6 +49,9 @@ private:
     SDL_Renderer *renderer = nullptr;
 
     SDL_Texture *playerTex = nullptr;
+
+    std::vector<Enemy *> arrayOfEnemy;
+
 
     SDL_FRect player;
 };

@@ -1,6 +1,13 @@
 {
     "files.associations": {
         "*.tcc": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "iostream": "cpp",
+        "new": "cpp",
+        "unordered_map": "cpp",
+        "istream": "cpp",
+        "numeric": "cpp",
+        "ostream": "cpp",
+        "cmath": "cpp"
     }
 }

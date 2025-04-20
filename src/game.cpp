@@ -1,9 +1,11 @@
 #include "game.h"
-#include "map.h"
 #include <iostream>
+#include<time.h>
 
 #define TILE_SIZE 35
 #define PLAYER_SPEED 5.0
+int randH, randW;
+int ROATATION_ANGLE = 0;
 
 int tile;
 
@@ -20,7 +22,9 @@ Game::~Game()
 }
 
 bool Game::init(const char *title)
-{
+{   
+    srand(time(NULL));
+
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
     {
         SDL_Log("SDL Init failed: %s", SDL_GetError());
@@ -45,25 +49,38 @@ bool Game::init(const char *title)
 
     playerTex = IMG_LoadTexture(renderer, "assets/images/png/pacman.png");
 
-
     if (!playerTex)
     {
         SDL_Log("Failed to load player texture: %s", SDL_GetError());
         return false;
     }
 
+    SDL_Texture *enemyTexture = IMG_LoadTexture(renderer, "assets/images/pacmanIMG.png");
+    if (!enemyTexture)
+    {
+        SDL_Log("Failed to load sprite sheet: %s", SDL_GetError());
+    }
+
+    for(int i = 0; i < 4; i++){
+
+
+        randH = rand() % 632 + 32;
+        randW = rand() % 980 +32;
+        if(randH > 632 - TILE_SIZE - TILE_SIZE){
+            randH = 632 - 64;
+        }
+        if(randW > 980 - TILE_SIZE - TILE_SIZE){
+            randW = 980 - 2 * TILE_SIZE;
+        }
+
+        Enemy * enemy = new Enemy(renderer, TILE_SIZE * i, TILE_SIZE * i * 2);
+        arrayOfEnemy.push_back(enemy);
+        arrayOfEnemy.back()->init(renderer, "assets/images/pacmanIMG.png", randW, randH, TILE_SIZE, i);
+    }
+
     isRunning = true;
     return true;
 }
-
-// SDL_Texture *Game::loadTexture(const char *path)
-// {
-
-//     SDL_Surface *playerSurface = IMG_Load("assets/images/png/pacman.png");
-//     SDL_Texture *playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
-//     SDL_DestroySurface(playerSurface);
-//     return playerTexture;
-// }
 
 void Game::handleEvents()
 {
@@ -104,15 +121,19 @@ void Game::movePlayer()
     {
     case UP:
         player.y -= PLAYER_SPEED;
+        ROATATION_ANGLE = -90;
         break;
     case DOWN:
         player.y += PLAYER_SPEED;
+        ROATATION_ANGLE = 90;
         break;
     case LEFT:
         player.x -= PLAYER_SPEED;
+        ROATATION_ANGLE = 180;
         break;
     case RIGHT:
         player.x += PLAYER_SPEED;
+        ROATATION_ANGLE = 0;
         break;
     default:
         break;
@@ -122,20 +143,24 @@ void Game::movePlayer()
 void Game::update()
 {
 
+
+    for(auto it: arrayOfEnemy){
+        // it->update(player.x, player.y);
+        if(it->collision(player.x, player.y)){
+            std::cout<<"COLLIDER"<<std::endl;
+
+            randH = rand() % (632 - 2 * TILE_SIZE) + TILE_SIZE;
+            randW = rand() % (980 - 2 * TILE_SIZE) + TILE_SIZE;
+            it->changePos(randH, randW);
+        }        
+    }
+
     Uint64 currentTime = SDL_GetPerformanceCounter();
     deltaTime = (float)(currentTime - lastTime) / SDL_GetPerformanceFrequency();
     lastTime = currentTime;
 
     movePlayer();
     collision();
-}
-
-void Game::renderPlayer()
-{
-    SDL_SetRenderDrawColor(renderer, 255, 225, 225, 255);
-    // SDL_RenderFillRect(renderer, &player);
-
-    SDL_RenderTexture(renderer, playerTex, nullptr, &player);
 }
 
 void Game::render()
@@ -145,9 +170,25 @@ void Game::render()
     SDL_RenderClear(renderer);
 
     renderMap();
+
+    for(int i= 0; i < 4; i++){
+        arrayOfEnemy[i]->render(renderer);
+    }
+
     renderPlayer();
 
     SDL_RenderPresent(renderer);
+}
+
+void Game::renderPlayer()
+{
+    SDL_FlipMode PARA = SDL_FLIP_NONE;
+    SDL_SetRenderDrawColor(renderer, 255, 225, 225, 255);
+    if(ROATATION_ANGLE == 180){
+        PARA = SDL_FLIP_VERTICAL;
+    }
+    SDL_RenderTextureRotated(renderer, playerTex, nullptr, &player, ROATATION_ANGLE, NULL, PARA);
+    // SDL_RenderTexture(renderer, playerTex, nullptr, &player);
 }
 
 void Game::renderMap()
@@ -221,6 +262,11 @@ void Game::clean()
     {
         SDL_DestroyTexture(playerTex);
         playerTex = nullptr;
+    }
+
+    for(auto it: arrayOfEnemy){
+        delete it;
+        it = nullptr;
     }
 
     SDL_DestroyRenderer(renderer);
