@@ -45,6 +45,7 @@ bool Game::init(const char *title)
         return false;
     }
 
+
     player = {(float)(WINDOW_W - TILE_SIZE) / 2, (float)(WINDOW_H - TILE_SIZE) / 2, TILE_SIZE, TILE_SIZE};
 
     playerTex = IMG_LoadTexture(renderer, "assets/images/png/pacman.png");
@@ -55,7 +56,7 @@ bool Game::init(const char *title)
         return false;
     }
 
-    SDL_Texture *enemyTexture = IMG_LoadTexture(renderer, "assets/images/pacmanIMG.png");
+    SDL_Texture *enemyTexture = IMG_LoadTexture(renderer, "assets/images/png/pacmanIMG.png");
     if (!enemyTexture)
     {
         SDL_Log("Failed to load sprite sheet: %s", SDL_GetError());
@@ -75,9 +76,16 @@ bool Game::init(const char *title)
 
         Enemy * enemy = new Enemy(renderer, TILE_SIZE * i, TILE_SIZE * i * 2);
         arrayOfEnemy.push_back(enemy);
-        arrayOfEnemy.back()->init(renderer, "assets/images/pacmanIMG.png", randW, randH, TILE_SIZE, i);
+        arrayOfEnemy.back()->init(renderer, "assets/images/png/pacmanIMG.png", randW, randH, TILE_SIZE, i);
     }
 
+    mapTex = loadTexture("map.png");
+    if(!mapTex){
+        std::cout<<"Cannot laod map"<<std::endl;
+        return false;
+    }
+
+    hitbox.init();
     isRunning = true;
     return true;
 }
@@ -108,6 +116,11 @@ void Game::handleEvents()
                 currentDirection = RIGHT;
                 break;
             }
+        }
+        else if(event.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
+            float mouseX, mouseY;
+            SDL_GetMouseState(&mouseX, &mouseY);
+            std::cout<<mouseX <<"--->"<<mouseY<<std::endl;
         }
     }
 }
@@ -160,17 +173,43 @@ void Game::update()
     lastTime = currentTime;
 
     movePlayer();
-    collision();
+
+    if(hitbox.checkForCollision(player.x, player.y)){
+        std::cout<<"COLLIDED"<<std::endl;
+        int offset = 0;
+        if(currentDirection == UP){
+            currentDirection = NONE;
+            player.y += 5;
+            return;
+        }
+        else if(currentDirection == LEFT){
+            currentDirection = NONE;
+            player.x += 5;
+            return;
+        }
+        else if(currentDirection == RIGHT){
+            currentDirection = NONE;
+            player.x -= 5;
+            return;
+        }
+        else if(currentDirection == DOWN){
+            currentDirection = NONE;
+            player.y -= 5;
+            return;
+        }
+    }
 }
 
 void Game::render()
-{
+{   
+
+
     // Set background color (dark gray to make walls/tiles stand out)
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     SDL_RenderClear(renderer);
 
     renderMap();
-
+    hitbox.render(renderer);
     for(int i= 0; i < 4; i++){
         arrayOfEnemy[i]->render(renderer);
     }
@@ -191,69 +230,6 @@ void Game::renderPlayer()
     // SDL_RenderTexture(renderer, playerTex, nullptr, &player);
 }
 
-void Game::renderMap()
-{
-
-    for (int row = 0; row < 31; ++row)
-    {
-        for (int col = 0; col < 28; ++col)
-        {
-            tile = pacmanMap[row][col];
-
-            SDL_FRect rect;
-            rect.x = col * TILE_SIZE;
-            rect.y = row * TILE_SIZE;
-            rect.w = TILE_SIZE;
-            rect.h = TILE_SIZE;
-
-            // Choose color based on tile type
-            switch (tile)
-            {
-            case 0:
-                SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-                break; // path
-            case 1:
-                SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-
-                break; // wall
-            default:
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-                break;
-            }
-
-            SDL_RenderFillRect(renderer, &rect);
-        }
-    }
-}
-
-void Game::collision()
-{
-
-    int tileX = (int)(player.x / TILE_SIZE);
-    int tileY = (int)(player.y / TILE_SIZE);
-    std::cout << tileX << " " << tileY << std::endl;
-
-    if (player.x < 0 + TILE_SIZE)
-    {
-        player.x = TILE_SIZE + 2;
-        currentDirection = NONE;
-    }
-    else if (player.x > WINDOW_W - TILE_SIZE)
-    {
-        player.x = (WINDOW_W - 2 * TILE_SIZE) - 2;
-        currentDirection = NONE;
-    }
-    else if (player.y < 0 + TILE_SIZE)
-    {
-        player.y = TILE_SIZE + 2;
-        currentDirection = NONE;
-    }
-    else if (player.y > WINDOW_H - 2 * TILE_SIZE)
-    {
-        player.y = WINDOW_H - 2 * TILE_SIZE - 2;
-        currentDirection = NONE;
-    }
-}
 
 void Game::clean()
 {
@@ -272,4 +248,26 @@ void Game::clean()
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+SDL_Texture * Game::loadTexture(const char *path){
+    SDL_Surface * surface = IMG_Load(path);
+    SDL_Texture * tex = SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_DestroySurface(surface);
+
+    return tex;
+}
+
+void Game::renderMap(){
+
+    SDL_SetTextureScaleMode(mapTex, SDL_SCALEMODE_NEAREST);
+    // "0" = nearest pixel sampling
+
+
+    SDL_FRect src = {0, 7, 224, 256};
+    SDL_FRect dest = {0,0,720,720};
+
+    SDL_RenderTexture(renderer, mapTex, &src, &dest);
+
 }
