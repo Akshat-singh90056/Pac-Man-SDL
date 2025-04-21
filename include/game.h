@@ -3,7 +3,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include "enemy.h"
-#include "map.h"
+#include "hitbox.h"
 #include<vector>
 class Game
 {
@@ -49,6 +49,7 @@ private:
     SDL_Renderer *renderer = nullptr;
 
     SDL_Texture *playerTex = nullptr;
+    SDL_Texture *mapTex = nullptr;
 
     std::vector<Enemy *> arrayOfEnemy;
 

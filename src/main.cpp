@@ -1,6 +1,6 @@
 #include "game.h"
 
-Game game(980, 632);
+Game game(720, 720);
 
 int main(int argc, char *argv[])
 {

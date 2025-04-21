@@ -1,6 +1,6 @@
 #include "game.h"
 #include <iostream>
-#include<time.h>
+#include <time.h>
 
 #define TILE_SIZE 35
 #define PLAYER_SPEED 5.0
@@ -22,7 +22,7 @@ Game::~Game()
 }
 
 bool Game::init(const char *title)
-{   
+{
     srand(time(NULL));
 
     if (SDL_Init(SDL_INIT_VIDEO) == 0)
@@ -61,21 +61,29 @@ bool Game::init(const char *title)
         SDL_Log("Failed to load sprite sheet: %s", SDL_GetError());
     }
 
-    for(int i = 0; i < 4; i++){
-
+    for (int i = 0; i < 4; i++)
+    {
 
         randH = rand() % 632 + 32;
-        randW = rand() % 980 +32;
-        if(randH > 632 - TILE_SIZE - TILE_SIZE){
+        randW = rand() % 980 + 32;
+        if (randH > 632 - TILE_SIZE - TILE_SIZE)
+        {
             randH = 632 - 64;
         }
-        if(randW > 980 - TILE_SIZE - TILE_SIZE){
+        if (randW > 980 - TILE_SIZE - TILE_SIZE)
+        {
             randW = 980 - 2 * TILE_SIZE;
         }
 
-        Enemy * enemy = new Enemy(renderer, TILE_SIZE * i, TILE_SIZE * i * 2);
+        Enemy *enemy = new Enemy(renderer, TILE_SIZE * i, TILE_SIZE * i * 2);
         arrayOfEnemy.push_back(enemy);
         arrayOfEnemy.back()->init(renderer, "assets/images/pacmanIMG.png", randW, randH, TILE_SIZE, i);
+    }
+
+    mapTex = IMG_LoadTexture(renderer, "assets/images/png/map.png");
+    if (!mapTex)
+    {
+        SDL_Log("Failed to load map texture: %s", SDL_GetError());
     }
 
     isRunning = true;
@@ -143,16 +151,17 @@ void Game::movePlayer()
 void Game::update()
 {
 
-
-    for(auto it: arrayOfEnemy){
+    for (auto it : arrayOfEnemy)
+    {
         // it->update(player.x, player.y);
-        if(it->collision(player.x, player.y)){
-            std::cout<<"COLLIDER"<<std::endl;
+        if (it->collision(player.x, player.y))
+        {
+            std::cout << "COLLIDER" << std::endl;
 
             randH = rand() % (632 - 2 * TILE_SIZE) + TILE_SIZE;
             randW = rand() % (980 - 2 * TILE_SIZE) + TILE_SIZE;
             it->changePos(randH, randW);
-        }        
+        }
     }
 
     Uint64 currentTime = SDL_GetPerformanceCounter();
@@ -160,7 +169,7 @@ void Game::update()
     lastTime = currentTime;
 
     movePlayer();
-    collision();
+    
 }
 
 void Game::render()
@@ -171,7 +180,8 @@ void Game::render()
 
     renderMap();
 
-    for(int i= 0; i < 4; i++){
+    for (int i = 0; i < 4; i++)
+    {
         arrayOfEnemy[i]->render(renderer);
     }
 
@@ -184,75 +194,35 @@ void Game::renderPlayer()
 {
     SDL_FlipMode PARA = SDL_FLIP_NONE;
     SDL_SetRenderDrawColor(renderer, 255, 225, 225, 255);
-    if(ROATATION_ANGLE == 180){
+    if (ROATATION_ANGLE == 180)
+    {
         PARA = SDL_FLIP_VERTICAL;
     }
     SDL_RenderTextureRotated(renderer, playerTex, nullptr, &player, ROATATION_ANGLE, NULL, PARA);
     // SDL_RenderTexture(renderer, playerTex, nullptr, &player);
 }
 
+
 void Game::renderMap()
-{
+{   
 
-    for (int row = 0; row < 31; ++row)
-    {
-        for (int col = 0; col < 28; ++col)
-        {
-            tile = pacmanMap[row][col];
+        SDL_SetTextureScaleMode(mapTex, SDL_SCALEMODE_NEAREST);
 
-            SDL_FRect rect;
-            rect.x = col * TILE_SIZE;
-            rect.y = row * TILE_SIZE;
-            rect.w = TILE_SIZE;
-            rect.h = TILE_SIZE;
-
-            // Choose color based on tile type
-            switch (tile)
-            {
-            case 0:
-                SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-                break; // path
-            case 1:
-                SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-
-                break; // wall
-            default:
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-                break;
-            }
-
-            SDL_RenderFillRect(renderer, &rect);
-        }
-    }
+    SDL_FRect scrRect = {0,7, 224, 256};
+    SDL_FRect destRect = {0, 0, 720, 720};
+    SDL_RenderTexture(renderer, mapTex, &scrRect, &destRect);
 }
 
-void Game::collision()
+
+
+
+
+SDL_Texture *Game::loadTexture(const char *path)
 {
-
-    int tileX = (int)(player.x / TILE_SIZE);
-    int tileY = (int)(player.y / TILE_SIZE);
-    std::cout << tileX << " " << tileY << std::endl;
-
-    if (player.x < 0 + TILE_SIZE)
-    {
-        player.x = TILE_SIZE + 2;
-        currentDirection = NONE;
-    }
-    else if (player.x > WINDOW_W - TILE_SIZE)
-    {
-        player.x = (WINDOW_W - 2 * TILE_SIZE) - 2;
-        currentDirection = NONE;
-    }
-    else if (player.y < 0 + TILE_SIZE)
-    {
-        player.y = TILE_SIZE + 2;
-        currentDirection = NONE;
-    }
-    else if (player.y > WINDOW_H - 2 * TILE_SIZE)
-    {
-        player.y = WINDOW_H - 2 * TILE_SIZE - 2;
-        currentDirection = NONE;
-    }
+    SDL_Surface *surface = IMG_Load("map.png");
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_DestroySurface(surface);
+    return texture;
 }
 
 void Game::clean()
@@ -264,7 +234,8 @@ void Game::clean()
         playerTex = nullptr;
     }
 
-    for(auto it: arrayOfEnemy){
+    for (auto it : arrayOfEnemy)
+    {
         delete it;
         it = nullptr;
     }
