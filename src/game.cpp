@@ -55,7 +55,7 @@ bool Game::init(const char *title)
         return false;
     }
 
-    SDL_Texture *enemyTexture = IMG_LoadTexture(renderer, "assets/images/pacmanIMG.png");
+    SDL_Texture *enemyTexture = IMG_LoadTexture(renderer, "assets/images/png/pacmanIMG.png");
     if (!enemyTexture)
     {
         SDL_Log("Failed to load sprite sheet: %s", SDL_GetError());
@@ -77,15 +77,17 @@ bool Game::init(const char *title)
 
         Enemy *enemy = new Enemy(renderer, TILE_SIZE * i, TILE_SIZE * i * 2);
         arrayOfEnemy.push_back(enemy);
-        arrayOfEnemy.back()->init(renderer, "assets/images/pacmanIMG.png", randW, randH, TILE_SIZE, i);
+        arrayOfEnemy.back()->init(renderer, "assets/images/png/pacmanIMG.png", randW, randH, TILE_SIZE, i);
     }
 
-    mapTex = IMG_LoadTexture(renderer, "assets/images/png/map.png");
+    mapTex = loadTexture("assets/images/png/map.png");
     if (!mapTex)
     {
-        SDL_Log("Failed to load map texture: %s", SDL_GetError());
+        std::cout << "Cannot laod map" << std::endl;
+        return false;
     }
 
+    hitbox.init();
     isRunning = true;
     return true;
 }
@@ -116,6 +118,12 @@ void Game::handleEvents()
                 currentDirection = RIGHT;
                 break;
             }
+        }
+        else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+        {
+            float mouseX, mouseY;
+            SDL_GetMouseState(&mouseX, &mouseY);
+            std::cout << mouseX << "--->" << mouseY << std::endl;
         }
     }
 }
@@ -169,17 +177,47 @@ void Game::update()
     lastTime = currentTime;
 
     movePlayer();
-    
+
+    if (hitbox.checkForCollision(player.x, player.y))
+    {
+        std::cout << "COLLIDED" << std::endl;
+        int offset = 0;
+        if (currentDirection == UP)
+        {
+            currentDirection = NONE;
+            player.y += 5;
+            return;
+        }
+        else if (currentDirection == LEFT)
+        {
+            currentDirection = NONE;
+            player.x += 5;
+            return;
+        }
+        else if (currentDirection == RIGHT)
+        {
+            currentDirection = NONE;
+            player.x -= 5;
+            return;
+        }
+        else if (currentDirection == DOWN)
+        {
+            currentDirection = NONE;
+            player.y -= 5;
+            return;
+        }
+    }
 }
 
 void Game::render()
 {
+
     // Set background color (dark gray to make walls/tiles stand out)
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     SDL_RenderClear(renderer);
 
     renderMap();
-
+    hitbox.render(renderer);
     for (int i = 0; i < 4; i++)
     {
         arrayOfEnemy[i]->render(renderer);
@@ -202,29 +240,6 @@ void Game::renderPlayer()
     // SDL_RenderTexture(renderer, playerTex, nullptr, &player);
 }
 
-
-void Game::renderMap()
-{   
-
-        SDL_SetTextureScaleMode(mapTex, SDL_SCALEMODE_NEAREST);
-
-    SDL_FRect scrRect = {0,7, 224, 256};
-    SDL_FRect destRect = {0, 0, 720, 720};
-    SDL_RenderTexture(renderer, mapTex, &scrRect, &destRect);
-}
-
-
-
-
-
-SDL_Texture *Game::loadTexture(const char *path)
-{
-    SDL_Surface *surface = IMG_Load("map.png");
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_DestroySurface(surface);
-    return texture;
-}
-
 void Game::clean()
 {
 
@@ -243,4 +258,26 @@ void Game::clean()
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+SDL_Texture *Game::loadTexture(const char *path)
+{
+    SDL_Surface *surface = IMG_Load(path);
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_DestroySurface(surface);
+
+    return tex;
+}
+
+void Game::renderMap()
+{
+
+    SDL_SetTextureScaleMode(mapTex, SDL_SCALEMODE_NEAREST);
+    // "0" = nearest pixel sampling
+
+    SDL_FRect src = {0, 7, 224, 256};
+    SDL_FRect dest = {0, 0, 720, 720};
+
+    SDL_RenderTexture(renderer, mapTex, &src, &dest);
 }

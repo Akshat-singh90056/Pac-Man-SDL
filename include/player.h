@@ -1,23 +1,21 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <SDL3/SDL.h>
 
-class Player {
-    public:
-        Player();
-        ~Player();
+class Player
+{
+public:
+    Player(SDL_Renderer *renderer); // Pass renderer to constructor
+    ~Player();
 
-        void render();
-        void update();
+    void render();
+    void update();
 
-    private:
-
-    SDL_GetWindowSurface(window);
-
-    SDL_Texture * playerTexture;
+private:
+    SDL_Renderer *renderer; // Store the renderer
+    SDL_Texture *playerTexture;
     SDL_Rect playerRect;
-
 };
 
-
-#endif
+#endif // PLAYER_H

@@ -3,8 +3,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include "enemy.h"
-#include "hitbox.h"
+#include "map.h"
 #include<vector>
+#include"hitbox.h"
 class Game
 {
 public:
@@ -29,7 +30,6 @@ public:
     void handleEvents();
     void render();
     void renderPlayer();
-    void collision();
     void movePlayer();
     void update();
 
@@ -37,10 +37,9 @@ public:
 
     bool running() const { return isRunning; }
     void clean();
-
-private:
     void renderMap();
 
+private:
     int WINDOW_W;
     int WINDOW_H;
     bool isRunning;
@@ -51,8 +50,10 @@ private:
     SDL_Texture *playerTex = nullptr;
     SDL_Texture *mapTex = nullptr;
 
+
     std::vector<Enemy *> arrayOfEnemy;
 
+    Hitbox hitbox;
 
     SDL_FRect player;
 };
