@@ -3,7 +3,7 @@
 #include <time.h>
 
 #define TILE_SIZE 35
-#define PLAYER_SPEED 5.0
+#define PLAYER_SPEED 2.0
 int randH, randW;
 int ROATATION_ANGLE = 0;
 
